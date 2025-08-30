@@ -72,7 +72,7 @@ public class FilmController {
         }
         if (film.getId() <= 0) {
             film.setId(++id);
-            log.info("Некорректный id ильма изменен на - '{}", film.getId());
+            log.info("Некорректный id фильма изменен на - '{}", film.getId());
         } else id++;
     }
 }
