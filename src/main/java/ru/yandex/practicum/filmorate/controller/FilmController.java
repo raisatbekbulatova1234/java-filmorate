@@ -5,9 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,7 +21,7 @@ public class FilmController {
     //добавление фильма;
     @ResponseBody
     @PostMapping
-    public void createFilms(@RequestBody Film film) {
+    public void createFilm(@RequestBody Film film) {
 
         if (films.containsKey(film.getId())) {
             throw new ValidationException("Фильм уже существует");
@@ -66,10 +64,7 @@ public class FilmController {
         if (film.getDescription().length() > 200) {
             throw new ValidationException("Максимальная длина описания — 200 символов");
         }
-        Instant releaseDate = film.getReleaseDate();
-        LocalDate minReleaseDate = LocalDate.of(1895, 12, 28);
-        Instant minTime = minReleaseDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-        if (releaseDate.isBefore(minTime)) {
+        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
             throw new ValidationException("Дата релиза должна быть не раньше 28 декабря 1895 года");
         }
         if (film.getDuration().isNegative()) {

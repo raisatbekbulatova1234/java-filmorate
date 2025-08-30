@@ -5,9 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -66,9 +64,7 @@ public class UserController {
         if (user.getLogin().isEmpty() || user.getLogin().contains(" ")) {
             throw new ValidationException("Логин не может быть пустым и содержать пробелы");
         }
-        LocalDate birthday = LocalDate.parse(user.getBirthday());
-        Instant birthdayDate = birthday.atStartOfDay(ZoneId.systemDefault()).toInstant();
-        if (birthdayDate.isAfter(Instant.now())) {
+        if (user.getBirthday().isAfter(LocalDate.now())) {
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
         if (user.getId() == 0 || user.getId() < 0) {

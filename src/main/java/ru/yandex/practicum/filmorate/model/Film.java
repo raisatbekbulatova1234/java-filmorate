@@ -1,22 +1,24 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
-import java.time.Instant;
+import java.time.LocalDate;
 
 /**
  * Film.
  */
-@Slf4j
+
 @Data
 @AllArgsConstructor
+@Builder
 public class Film {
-    int id;
-    String name;
-    String description;
-    Instant releaseDate;
-    Duration duration;
+
+    private int id;
+    private String name;
+    private String description;
+    private LocalDate releaseDate;
+    private Duration duration;
 }
