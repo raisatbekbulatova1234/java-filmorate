@@ -18,6 +18,7 @@ import java.util.Map;
 @RequestMapping("/users")
 public class UserController {
     Map<Integer, User> users = new HashMap<>();
+    private int id = 0;
 
     //создание пользователя;
     @ResponseBody
@@ -28,6 +29,7 @@ public class UserController {
                 throw new ValidationException("Пользователь уже существует");
             }
             userValidation(user);
+            if (user.getName() == null) user.setName(user.getLogin());
             users.put(user.getId(), user);
             log.info("Пользователь'{}' с id - '{}' был создан", user.getName(), user.getId());
 
@@ -45,6 +47,7 @@ public class UserController {
             throw new ValidationException("Пользователя с таким ID не существует");
         }
         userValidation(user);
+        if (user.getName() == null) user.setName(user.getLogin());
         users.put(user.getId(), user);
         log.info("Информация о пользователе'{}' с id - '{}' была обновлена", user.getName(), user.getId());
     }
@@ -68,7 +71,9 @@ public class UserController {
         if (birthdayDate.isAfter(Instant.now())) {
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
-        if (user.getName() == null) user.setName(user.getLogin());
-
+        if (user.getId() == 0 || user.getId() < 0) {
+            user.setId(++id);
+            log.info("Некорректный id пользователя изменен на - '{}'", user.getId());
+        } else id++;
     }
 }

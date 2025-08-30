@@ -18,6 +18,7 @@ import java.util.Map;
 @RequestMapping("/films")
 public class FilmController {
     Map<Integer, Film> films = new HashMap<>();
+    private int id = 0;
 
     //добавление фильма;
     @ResponseBody
@@ -74,5 +75,9 @@ public class FilmController {
         if (film.getDuration().isNegative()) {
             throw new ValidationException("Продолжительность фильма должна быть положительным числом");
         }
+        if (film.getId() <= 0) {
+            film.setId(++id);
+            log.info("Некорректный id ильма изменен на - '{}", film.getId());
+        } else id++;
     }
 }
