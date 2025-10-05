@@ -15,18 +15,16 @@ import java.util.Map;
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    Map<Integer, User> users = new HashMap<>();
+    Map<Long, User> users = new HashMap<>();
     private int id = 0;
 
     //создание пользователя;
-    @ResponseBody
     @PostMapping
     public void createUser(@RequestBody User user) {
         if (user != null) {
             if (users.containsKey(user.getId())) {
                 throw new ValidationException("Пользователь уже существует");
             }
-            userValidation(user);
             if (user.getName() == null) user.setName(user.getLogin());
             users.put(user.getId(), user);
             log.info("Пользователь'{}' с id - '{}' был создан", user.getName(), user.getId());
@@ -46,6 +44,7 @@ public class UserController {
         }
         userValidation(user);
         if (user.getName() == null) user.setName(user.getLogin());
+        user.setId(nextId());
         users.put(user.getId(), user);
         log.info("Информация о пользователе'{}' с id - '{}' была обновлена", user.getName(), user.getId());
     }
@@ -58,18 +57,26 @@ public class UserController {
     }
 
     private void userValidation(User user) {
-        if (user.getEmail() == null || !user.getEmail().contains("@")) {
-            throw new ValidationException("Электронная почта не может быть пустой и должна содержать символ @");
-        }
-        if (user.getLogin().isEmpty() || user.getLogin().contains(" ")) {
-            throw new ValidationException("Логин не может быть пустым и содержать пробелы");
-        }
+//        if (user.getEmail() == null || !user.getEmail().contains("@")) {
+//            throw new ValidationException("Электронная почта не может быть пустой и должна содержать символ @");
+//        }
+//        if (user.getLogin().isEmpty() || user.getLogin().contains(" ")) {
+//            throw new ValidationException("Логин не может быть пустым и содержать пробелы");
+//        }
         if (user.getBirthday().isAfter(LocalDate.now())) {
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
         if (user.getId() == 0 || user.getId() < 0) {
             user.setId(++id);
             log.info("Некорректный id пользователя изменен на - '{}'", user.getId());
-        } else id++;
+        }
+    }
+    private long nextId() {
+        long currentMaxId = users.keySet()
+                .stream()
+                .mapToLong(id -> id)
+                .max()
+                .orElse(0);
+        return ++currentMaxId;
     }
 }
