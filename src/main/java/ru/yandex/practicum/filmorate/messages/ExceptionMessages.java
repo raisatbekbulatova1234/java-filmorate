@@ -9,5 +9,5 @@ public class ExceptionMessages {
     public static final String EMPTY_LOGIN = "login не может быть пустой";
     public static final String INCORRECT_BIRTHDAY = "Дата рождения не может быть в будущем";
     public static final String LOGIN_WITHOUT_SPACE = "login не должен содержать пробелы";
-    public static final String INCORRECT_DATE= "Дата релиза должна быть не раньше 28 декабря 1895 года";
+    public static final String INCORRECT_DATE = "Дата релиза должна быть не раньше 28 декабря 1895 года";
 }
