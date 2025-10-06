@@ -11,7 +11,7 @@ import java.lang.annotation.*;
 @Target({ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface LoginConstraint {
-    String message() default "Логин не может быть пустым и содержать пробелы";
+    String message();
 
     Class<?>[] groups() default {};
 

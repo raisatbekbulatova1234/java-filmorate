@@ -1,14 +1,15 @@
 package ru.yandex.practicum.filmorate.model;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
-import ru.yandex.practicum.filmorate.validation.Film.DescriptionConstraint;
-import ru.yandex.practicum.filmorate.validation.Film.FilmDurationConstraint;
+import lombok.Getter;
+import lombok.Setter;
+import ru.yandex.practicum.filmorate.messages.ExceptionMessages;
 import ru.yandex.practicum.filmorate.validation.Film.ReleaseDateConstraint;
 
-import java.time.Duration;
 import java.time.LocalDate;
 
 /**
@@ -16,17 +17,19 @@ import java.time.LocalDate;
  */
 
 @Data
-@AllArgsConstructor
+@Getter
+@Setter
 @Builder
 public class Film {
 
-    private long id;
-    @NotBlank
+    private int id;
+    @NotBlank(message = ExceptionMessages.EMPTY_NAME)
     private String name;
-    @DescriptionConstraint
+    @Size(max = 200, message = ExceptionMessages.MAX_DESCRIPTION)
     private String description;
-    @ReleaseDateConstraint
+    @ReleaseDateConstraint(message = ExceptionMessages.INCORRECT_DATE)
     private LocalDate releaseDate;
-    @FilmDurationConstraint
-    private Duration duration;
+    @PositiveOrZero(message = ExceptionMessages.POSITIVE_DURATION)
+    private int duration;
+
 }

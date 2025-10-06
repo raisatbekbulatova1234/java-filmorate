@@ -15,7 +15,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    Map<Long, User> users = new HashMap<>();
+    Map<Integer, User> users = new HashMap<>();
 
     //создание пользователя;
     @PostMapping
@@ -53,12 +53,12 @@ public class UserController {
     }
 
 
-    private long nextId() {
-        long currentMaxId = users.keySet()
+    private int nextId() {
+        int currentMaxId = Math.toIntExact(users.keySet()
                 .stream()
                 .mapToLong(id -> id)
                 .max()
-                .orElse(0);
+                .orElse(0));
         return ++currentMaxId;
     }
 }

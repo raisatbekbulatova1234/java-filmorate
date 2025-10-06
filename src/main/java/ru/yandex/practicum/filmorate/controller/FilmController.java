@@ -15,7 +15,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/films")
 public class FilmController {
-    Map<Long, Film> films = new HashMap<>();
+    Map<Integer, Film> films = new HashMap<>();
 
     //добавление фильма;
     @PostMapping
@@ -48,12 +48,12 @@ public class FilmController {
         return new ArrayList<>(films.values());
     }
 
-    private long nextId() {
-        long currentMaxId = films.keySet()
+    private int nextId() {
+        int currentMaxId = Math.toIntExact(films.keySet()
                 .stream()
                 .mapToLong(id -> id)
                 .max()
-                .orElse(0);
+                .orElse(0));
         return ++currentMaxId;
     }
 }

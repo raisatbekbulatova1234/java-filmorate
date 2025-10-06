@@ -1,86 +1,71 @@
 //package ru.yandex.practicum.filmorate.controller;
 //
-//import org.junit.jupiter.api.Assertions;
+//import org.junit.jupiter.api.BeforeEach;
 //import org.junit.jupiter.api.Test;
+//import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 //import org.springframework.boot.test.context.SpringBootTest;
-//import ru.yandex.practicum.filmorate.exception.ValidationException;
-//import ru.yandex.practicum.filmorate.model.User;
+//import org.springframework.test.web.servlet.MockMvc;
 //
-//import java.time.LocalDate;
+//import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+//import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+//import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+//import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 //
 //@SpringBootTest
-//public class UserControllerTest {
-//    private final UserController controller = new UserController();
-//    private final User user = User.builder()
-//            .id(1)
-//            .email("yandex@yandex.ru")
-//            .login("user")
-//            .name("Raisat")
-//            .birthday(LocalDate.of(1997, 10, 26))
-//            .build();
+//@AutoConfigureMockMvc
+//class UserControllerTest {
 //
-//    @Test
-//    void createShouldCreateUser() {
-//        User thisUser = new User(1, "yandex@yandex.ru", "user", "Raisat",
-//                LocalDate.of(1997, 10, 26));
-//        controller.createUser(thisUser);
+//    @Autowired
+//    private MockMvc mockMvc;
 //
-//        Assertions.assertEquals(user, thisUser);
-//        Assertions.assertEquals(1, controller.getAllUsers().size());
+//    @BeforeEach
+//    void setUp() {
+//        // Здесь можно инициализировать состояние системы перед каждым тестом
 //    }
 //
 //    @Test
-//    void updateShouldUpdateUserData() {
-//        User thisUser = new User(1, "vic@yandex.ru", "sdnkjsdksl", "Victor",
-//                LocalDate.of(1976, 9, 20));
-//        controller.createUser(user);
-//        controller.updateUser(thisUser);
+//    void testCreateUser() throws Exception {
+//        // Подготовка данных для создания пользователя
+//        String userJson = "{\"login\": \"testUser\", \"name\": \"Test User\"}";
 //
-//        Assertions.assertEquals("vic@yandex.ru", thisUser.getEmail());
-//        Assertions.assertEquals(user.getId(), thisUser.getId());
-//        Assertions.assertEquals(1, controller.getAllUsers().size());
+//        // Отправка POST-запроса на создание пользователя
+//        mockMvc.perform(post("/users")
+//                        .contentType("application/json")
+//                        .content(userJson))
+//                .andExpect(status().isCreated());
 //    }
 //
 //    @Test
-//    void createShouldCreateUserIfNameIsEmpty() {
-//        User thisUser = new User(1, "mail@yandex.ru", "user", null,
-//                LocalDate.of(1990, 1, 1));
-//        controller.createUser(thisUser);
+//    void testUpdateUser() throws Exception {
+//        // Сначала создаем пользователя
+//        String userJson = "{\"login\": \"testUser\", \"name\": \"Test User\"}";
+//        mockMvc.perform(post("/users")
+//                        .contentType("application/json")
+//                        .content(userJson))
+//                .andExpect(status().isCreated());
 //
-//        Assertions.assertEquals(1, thisUser.getId());
-//        Assertions.assertEquals("user", thisUser.getName());
+//        // Затем обновляем пользователя
+//        userJson = "{\"id\": 1, \"login\": \"updatedUser\", \"name\": \"Updated User\"}";
+//        mockMvc.perform(put("/users")
+//                        .contentType("application/json")
+//                        .content(userJson))
+//                .andExpect(status().isOk());
 //    }
 //
 //    @Test
-//    void createShouldThrowExceptionIfEmailIncorrect() {
-//        user.setEmail("vic.mail.ru");
+//    void testGetAllUsers() throws Exception {
+//        // Создаем несколько пользователей
+//        for (int i = 0; i < 3; i++) {
+//            String userJson = String.format("{\"login\": \"user%d\", \"name\": \"User %d\"}", i, i);
+//            mockMvc.perform(post("/users")
+//                            .contentType("application/json")
+//                            .content(userJson))
+//                    .andExpect(status().isCreated());
+//        }
 //
-//        Assertions.assertThrows(ValidationException.class, () -> controller.createUser(user));
-//        Assertions.assertEquals(0, controller.getAllUsers().size());
+//        // Получаем список всех пользователей
+//        mockMvc.perform(get("/users"))
+//                .andExpect(status().isOk());
 //    }
-//
-//    @Test
-//    void createShouldThrowExceptionIfEmailIsEmpty() {
-//        user.setEmail("");
-//
-//        Assertions.assertThrows(ValidationException.class, () -> controller.createUser(user));
-//        Assertions.assertEquals(0, controller.getAllUsers().size());
-//    }
-//
-//    @Test
-//    void createShouldNotAddUserIfLoginIsEmpty() {
-//        user.setLogin("");
-//
-//        Assertions.assertThrows(ValidationException.class, () -> controller.createUser(user));
-//        Assertions.assertEquals(0, controller.getAllUsers().size());
-//    }
-//
-//    @Test
-//    void createShouldNotAddUserIfBirthdayIsInTheFuture() {
-//        user.setBirthday(LocalDate.of(3025, 8, 28));
-//
-//        Assertions.assertThrows(ValidationException.class, () -> controller.createUser(user));
-//        Assertions.assertEquals(0, controller.getAllUsers().size());
-//    }
-//
 //}
