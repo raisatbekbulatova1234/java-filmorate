@@ -23,6 +23,7 @@ import java.time.LocalDate;
 public class Film {
 
     private int id;
+
     @NotBlank(message = ExceptionMessages.EMPTY_NAME)
     private String name;
     @Size(max = 200, message = ExceptionMessages.MAX_DESCRIPTION)

@@ -7,16 +7,16 @@ import ru.yandex.practicum.filmorate.model.Film;
 import java.time.LocalDate;
 
 public class ReleaseDateValidator implements
-        ConstraintValidator<ReleaseDateConstraint, Film> {
+        ConstraintValidator<ReleaseDateConstraint, LocalDate> {
 
     @Override
     public void initialize(ReleaseDateConstraint releaseDate) {
     }
 
     @Override
-    public boolean isValid(Film film,
+    public boolean isValid(LocalDate date,
                            ConstraintValidatorContext cxt) {
-        return film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28));
+        return date.isAfter(LocalDate.of(1895, 12, 28));
     }
 
 }

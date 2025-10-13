@@ -39,7 +39,7 @@ public class UserController {
         }
 
         if (user.getName() == null) user.setName(user.getLogin());
-        user.setId(nextId());
+       // user.setId(nextId());
         users.put(user.getId(), user);
         log.info("Информация о пользователе'{}' с id - '{}' была обновлена", user.getName(), user.getId());
         return user;
