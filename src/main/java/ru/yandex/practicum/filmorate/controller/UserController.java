@@ -1,73 +1,67 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.InternalServerError;
+import ru.yandex.practicum.filmorate.exception.GlobalExceptionHandler;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.List;
 
-@Slf4j
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/users")
+@RequiredArgsConstructor
+
+@Import(GlobalExceptionHandler.class)
 public class UserController {
+
     private final UserService userService;
-    private final UserStorage userStorage;
 
-    //создание пользователя;
-    @PostMapping
-    public User createUser(@RequestBody @Valid User user) {
-        return userStorage.createUser(user);
-    }
-
-    //обновление пользователя;
-    @PutMapping
-    public User updateUser(@RequestBody @Valid User user) {
-        return userStorage.updateUser(user);
-    }
-
-    //получение списка всех пользователей
     @GetMapping
-    public List<User> getAllUsers() {
-        return userStorage.getAllUsers();
+    public List<User> getAll() {
+        return userService.getAll();
     }
 
-    //получение списка всех друзей пользователя
-    @GetMapping("{id}/friends")
-    public List<Long> getAllFriends(@PathVariable("id") Long userId) {
-        return userService.getFriendList(userId);
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public User addUser(@Valid @RequestBody User user) {
+        return userService.add(user);
     }
 
-    //получение списка общих друзей пользователей
-    @GetMapping("{id}/friends/common/{otherId}")
-    public List<Long> getAllCommonFriends(@PathVariable("id") Long userId,
-                                          @PathVariable("otherId") Long otherId) {
-        return userService.getCommonFriends(userId, otherId);
+    @PutMapping
+    public User updateUser(@Valid @RequestBody User user) {
+        return userService.update(user);
     }
 
-    //добавление друга
-    @PutMapping("{userId}/friends/{friendId}")
-    public ResponseEntity<String> addFriend(@PathVariable("userId") Long userId,
-                                            @PathVariable("friendId") Long friendId) {
-        try {
-            userService.addFriend(userId, friendId);
-            return ResponseEntity.ok("Пользователь успешно добавлен в друзья.");
-        } catch (InternalServerError e) {
-           // e.printStackTrace();
-            return ResponseEntity.status(500).body("Произошла ошибка при добавлении пользователя в друзья.");
-        }
+    @GetMapping("/{id}")
+    public User getUserById(@PathVariable @Positive long id) {
+        return userService.getById(id);
     }
 
-    //удаление друга
-    @DeleteMapping("{id}/friends/{friendId}")
-    public void removeFriend(@PathVariable("id") Long userId,
-                             @PathVariable("friendId") Long friendId) {
-        userService.removeFriend(userId, friendId);
+    @PutMapping("/{id}/friends/{friendId}")
+    public void addFriend(@PathVariable @Positive long id,
+                          @PathVariable @Positive long friendId) {
+        userService.addFriend(id, friendId);
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public void removeFriend(@PathVariable @Positive long id,
+                             @PathVariable @Positive long friendId) {
+        userService.removeFriend(id, friendId);
+    }
+
+    @GetMapping("/{id}/friends")
+    public List<User> getFriends(@PathVariable @Positive long id) {
+        return userService.getFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public List<User> getCommonFriends(@PathVariable @Positive long id,
+                                       @PathVariable @Positive long otherId) {
+        return userService.getCommonFriends(id, otherId);
     }
 }
