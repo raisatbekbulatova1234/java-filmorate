@@ -14,8 +14,8 @@ public class LoginValidator implements
     @Override
     public boolean isValid(String login, ConstraintValidatorContext context) {
         if (login == null || login.contains(" ")) {
-            context.buildConstraintViolationWithTemplate("Логин не должен содержать пробелы")
-                    .addConstraintViolation();
+            //context.buildConstraintViolationWithTemplate("Логин не должен содержать пробелы")
+                    //.addConstraintViolation();
             return false;
         }
         return true;

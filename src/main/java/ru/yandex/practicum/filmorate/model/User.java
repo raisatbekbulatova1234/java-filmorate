@@ -3,15 +3,15 @@ package ru.yandex.practicum.filmorate.model;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PastOrPresent;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import ru.yandex.practicum.filmorate.messages.ExceptionMessages;
 import ru.yandex.practicum.filmorate.validation.User.LoginConstraint;
 
 import java.time.LocalDate;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * User.
@@ -23,7 +23,6 @@ import java.util.Set;
 public class User {
     private Long id;
 
-    // ✅ Вместо Set<Long> теперь Map<друг, статус>
     private Map<Long, FriendshipStatus> friends = new HashMap<>();
     @Email(message = ExceptionMessages.INCORRECT_EMAIL)
     private String email;
@@ -33,5 +32,4 @@ public class User {
     private String name;
     @PastOrPresent(message = ExceptionMessages.INCORRECT_BIRTHDAY)
     private LocalDate birthday;
-   // private Set<Long> friends = new HashSet<>();
 }

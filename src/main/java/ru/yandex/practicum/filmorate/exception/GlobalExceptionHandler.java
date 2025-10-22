@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.exception;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -52,10 +51,7 @@ public class GlobalExceptionHandler {
         log.warn("MethodArgumentNotValidException: {}", ex.getMessage());
         return ex.getBindingResult().getFieldErrors()
                 .stream()
-                .collect(Collectors.toMap(
-                        FieldError::getField,
-                        FieldError::getDefaultMessage
-                ));
+                .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
     }
 
     // 400 ConstraintViolationException для @PathVariable и @RequestParam
