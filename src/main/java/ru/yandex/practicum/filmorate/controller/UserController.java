@@ -1,64 +1,73 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.exception.InternalServerError;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/users")
 public class UserController {
-    Map<Integer, User> users = new HashMap<>();
+    private final UserService userService;
+    private final UserStorage userStorage;
 
     //создание пользователя;
     @PostMapping
     public User createUser(@RequestBody @Valid User user) {
-        if (user.getName() == null) user.setName(user.getLogin());
-        user.setId(nextId());
-        users.put(user.getId(), user);
-        log.info("Пользователь'{}' с id - '{}' был создан", user.getName(), user.getId());
-        return user;
+        return userStorage.createUser(user);
     }
-
 
     //обновление пользователя;
     @PutMapping
     public User updateUser(@RequestBody @Valid User user) {
-        if (user == null) {
-            throw new ValidationException("Пользователь не может быть null");
-        }
-        if (!users.containsKey(user.getId())) {
-            throw new ValidationException("Пользователя с таким ID не существует");
-        }
-
-        if (user.getName() == null) user.setName(user.getLogin());
-       // user.setId(nextId());
-        users.put(user.getId(), user);
-        log.info("Информация о пользователе'{}' с id - '{}' была обновлена", user.getName(), user.getId());
-        return user;
+        return userStorage.updateUser(user);
     }
-
 
     //получение списка всех пользователей
     @GetMapping
     public List<User> getAllUsers() {
-        return new ArrayList<>(users.values());
+        return userStorage.getAllUsers();
     }
 
+    //получение списка всех друзей пользователя
+    @GetMapping("{id}/friends")
+    public List<Long> getAllFriends(@PathVariable("id") Long userId) {
+        return userService.getFriendList(userId);
+    }
 
-    private int nextId() {
-        int currentMaxId = Math.toIntExact(users.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0));
-        return ++currentMaxId;
+    //получение списка общих друзей пользователей
+    @GetMapping("{id}/friends/common/{otherId}")
+    public List<Long> getAllCommonFriends(@PathVariable("id") Long userId,
+                                          @PathVariable("otherId") Long otherId) {
+        return userService.getCommonFriends(userId, otherId);
+    }
+
+    //добавление друга
+    @PutMapping("{userId}/friends/{friendId}")
+    public ResponseEntity<String> addFriend(@PathVariable("userId") Long userId,
+                                            @PathVariable("friendId") Long friendId) {
+        try {
+            userService.addFriend(userId, friendId);
+            return ResponseEntity.ok("Пользователь успешно добавлен в друзья.");
+        } catch (InternalServerError e) {
+           // e.printStackTrace();
+            return ResponseEntity.status(500).body("Произошла ошибка при добавлении пользователя в друзья.");
+        }
+    }
+
+    //удаление друга
+    @DeleteMapping("{id}/friends/{friendId}")
+    public void removeFriend(@PathVariable("id") Long userId,
+                             @PathVariable("friendId") Long friendId) {
+        userService.removeFriend(userId, friendId);
     }
 }
