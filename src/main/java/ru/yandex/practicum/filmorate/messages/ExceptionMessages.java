@@ -10,4 +10,6 @@ public class ExceptionMessages {
     public static final String INCORRECT_BIRTHDAY = "Дата рождения не может быть в будущем";
     public static final String LOGIN_WITHOUT_SPACE = "login не должен содержать пробелы";
     public static final String INCORRECT_DATE = "Дата релиза должна быть не раньше 28 декабря 1895 года";
+    public static final String EMPTY_MPA_RATING = "У фильма должен быть указан рейтинг MPA";
+    public static final String INCORRECT_GENRES = "У фильма должен быть хотя бы один жанр";
 }
