@@ -1,67 +1,64 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Positive;
-import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Import;
-import org.springframework.http.HttpStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.GlobalExceptionHandler;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.UserService;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/users")
-@RequiredArgsConstructor
-
-@Import(GlobalExceptionHandler.class)
 public class UserController {
+    Map<Integer, User> users = new HashMap<>();
 
-    private final UserService userService;
+    //создание пользователя;
+    @PostMapping
+    public User createUser(@RequestBody @Valid User user) {
+        if (user.getName() == null) user.setName(user.getLogin());
+        user.setId(nextId());
+        users.put(user.getId(), user);
+        log.info("Пользователь'{}' с id - '{}' был создан", user.getName(), user.getId());
+        return user;
+    }
 
+
+    //обновление пользователя;
+    @PutMapping
+    public User updateUser(@RequestBody @Valid User user) {
+        if (user == null) {
+            throw new ValidationException("Пользователь не может быть null");
+        }
+        if (!users.containsKey(user.getId())) {
+            throw new ValidationException("Пользователя с таким ID не существует");
+        }
+
+        if (user.getName() == null) user.setName(user.getLogin());
+        // user.setId(nextId());
+        users.put(user.getId(), user);
+        log.info("Информация о пользователе'{}' с id - '{}' была обновлена", user.getName(), user.getId());
+        return user;
+    }
+
+
+    //получение списка всех пользователей
     @GetMapping
     public List<User> getAllUsers() {
-        return userService.getAllUsers();
+        return new ArrayList<>(users.values());
     }
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public User addUser(@Valid @RequestBody User user) {
-        return userService.addUsers(user);
-    }
 
-    @PutMapping
-    public User updateUser(@Valid @RequestBody User user) {
-        return userService.updateUsers(user);
-    }
-
-    @GetMapping("/{id}")
-    public User getUserById(@PathVariable @Positive long id) {
-        return userService.getUserById(id);
-    }
-
-    @PutMapping("/{id}/friends/{friendId}")
-    public void addFriend(@PathVariable @Positive long id,
-                          @PathVariable @Positive long friendId) {
-        userService.addFriend(id, friendId);
-    }
-
-    @DeleteMapping("/{id}/friends/{friendId}")
-    public void removeFriend(@PathVariable @Positive long id,
-                             @PathVariable @Positive long friendId) {
-        userService.removeFriend(id, friendId);
-    }
-
-    @GetMapping("/{id}/friends")
-    public List<User> getFriends(@PathVariable @Positive long id) {
-        return userService.getFriends(id);
-    }
-
-    @GetMapping("/{id}/friends/common/{otherId}")
-    public List<User> getCommonFriends(@PathVariable @Positive long id,
-                                       @PathVariable @Positive long otherId) {
-        return userService.getCommonFriends(id, otherId);
+    private int nextId() {
+        int currentMaxId = Math.toIntExact(users.keySet()
+                .stream()
+                .mapToLong(id -> id)
+                .max()
+                .orElse(0));
+        return ++currentMaxId;
     }
 }
