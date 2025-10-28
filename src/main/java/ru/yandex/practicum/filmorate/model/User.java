@@ -23,7 +23,6 @@ import java.util.Map;
 public class User {
     private Long id;
 
-    private Map<Long, FriendshipStatus> friends = new HashMap<>();
     @Email(message = ExceptionMessages.INCORRECT_EMAIL)
     private String email;
     @NotBlank(message = ExceptionMessages.EMPTY_LOGIN)
@@ -32,4 +31,6 @@ public class User {
     private String name;
     @PastOrPresent(message = ExceptionMessages.INCORRECT_BIRTHDAY)
     private LocalDate birthday;
+    private Map<Long, FriendshipStatus> friends = new HashMap<>();
+
 }

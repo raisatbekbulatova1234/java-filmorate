@@ -4,8 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.messages.ExceptionMessages;
 import ru.yandex.practicum.filmorate.messages.LogMessages;
-import ru.yandex.practicum.filmorate.messages.ValidationExceptionMessages;
 import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -16,9 +16,10 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class UserService {
-    @Autowired
+
     private final UserStorage storage;
 
+    @Autowired
     public UserService(UserStorage storage) {
         this.storage = storage;
     }
@@ -50,7 +51,7 @@ public class UserService {
         log.info(String.valueOf(LogMessages.TRY_ADD_FRIEND));
         User user = getUserById(userId);
         User friend = getUserById(friendId);
-        if (userId == friendId) throw new ValidationException(ValidationExceptionMessages.FRIEND_TO_FRIEND.toString());
+        if (userId == friendId) throw new ValidationException(ExceptionMessages.ERROR_FRIENDSHIP);
         // если у друга уже есть этот пользователь
         if (friend.getFriends().containsKey(userId)) {
             user.getFriends().put(friendId, FriendshipStatus.CONFIRMED);

@@ -28,10 +28,6 @@ public class Film {
     private LocalDate releaseDate;
     @PositiveOrZero(message = ExceptionMessages.POSITIVE_DURATION)
     private int duration;
-    // @FilmGenreConstraint(message = ExceptionMessages.INCORRECT_GENRES)
-    // private Set<String> genres = new HashSet<>();
-    //@MpaRatingConstraint(message = ExceptionMessages.EMPTY_MPA_RATING)
-    // private MpaRating mpaRating;
     private Set<Long> likes = new HashSet<>();
 
 }
