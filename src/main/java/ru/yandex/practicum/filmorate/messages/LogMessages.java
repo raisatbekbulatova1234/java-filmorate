@@ -23,7 +23,7 @@ public enum LogMessages {
 
     private final String textLog;
 
-    LogMessages(String textLog) {
+   LogMessages(String textLog) {
         this.textLog = textLog;
     }
 

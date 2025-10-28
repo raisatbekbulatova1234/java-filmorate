@@ -23,8 +23,9 @@ public class FilmService {
     public Film getById(long id) {
         return filmStorage.getFilmById(id);
     }
+
     public List<Film> getAllFilms() {
-        return  filmStorage.getAllFilms();
+        return filmStorage.getAllFilms();
     }
 
     public Film addFilm(Film film) {
