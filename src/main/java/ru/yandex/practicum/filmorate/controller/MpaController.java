@@ -1,39 +1,28 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.service.MpaService;
+import org.springframework.http.ResponseEntity;
 
-import java.util.List;
+import java.util.Collection;
 
 @RestController
-@Slf4j
-@Component
-
+@RequestMapping("/mpa")
+@RequiredArgsConstructor
 public class MpaController {
 
-    @Qualifier("MpaDBService")
     private final MpaService mpaService;
 
-    @Autowired
-    public MpaController(MpaService mpaService) {
-        this.mpaService = mpaService;
+    @GetMapping
+    public ResponseEntity<Collection<Mpa>> getAllMpa() {
+        return ResponseEntity.ok(mpaService.findAll());
     }
 
-    @GetMapping("/mpa")
-    public List<Mpa> getAllMpa() {
-        return mpaService.getAllMpa();
-    }
-
-    @GetMapping("/mpa/{id}")
-    public Mpa getMpa(@PathVariable("id") Integer id) {
-        return mpaService.getMpaById(id);
+    @GetMapping("/{id}")
+    public ResponseEntity<Mpa> getMpa(@PathVariable int id) {
+        return ResponseEntity.ok(mpaService.getById(id));
     }
 
 }

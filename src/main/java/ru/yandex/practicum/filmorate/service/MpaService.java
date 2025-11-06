@@ -1,41 +1,25 @@
 package ru.yandex.practicum.filmorate.service;
 
-
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.storage.film.dao.MpaStorage;
+import ru.yandex.practicum.filmorate.storage.database.MpaDbStorage;
 
-import java.util.List;
+import java.util.Collection;
 
 @Service
-@Qualifier("MpaDBService")
-@Slf4j
+@RequiredArgsConstructor
 public class MpaService {
 
-    @Qualifier("MpaDBStorage")
-    private final MpaStorage mpaDBStorage;
-    private final ValidationService validationService;
+    private final MpaDbStorage mpaDbStorage;
 
-    public MpaService(MpaStorage mpaDBStorage, ValidationService validationService) {
-        this.mpaDBStorage = mpaDBStorage;
-        this.validationService = validationService;
+    public Collection<Mpa> findAll() {
+        return mpaDbStorage.findAll();
     }
 
-    /**
-     * Получение MPA-рейтинга по его ID.
-     */
-    public Mpa getMpaById(Integer mpaId) {
-        validationService.checkExistMpaInDB(mpaId);
-        return mpaDBStorage.getMpaById(mpaId);
+    public Mpa getById(int id) {
+        return mpaDbStorage.getById(id)
+                .orElseThrow(() -> new NotFoundException("рейтинг MPA с id " + id + " не найден"));
     }
-
-    /**
-     * Получить список всех MPA из БД.
-     */
-    public List<Mpa> getAllMpa() {
-        return mpaDBStorage.getAllMpa();
-    }
-
 }

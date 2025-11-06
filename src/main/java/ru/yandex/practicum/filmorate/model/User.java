@@ -1,59 +1,33 @@
 package ru.yandex.practicum.filmorate.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.*;
+import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.Set;
 
-@Getter
-@Setter
-@Builder(toBuilder = true)
-@ToString
-@EqualsAndHashCode
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
+    private Long id;
 
-    @JsonIgnore
-    static Integer count = 1;
+    @NotBlank(message = "email должен быть указан")
+    @Email(message = "email должен содержать символ '@'")
+    private String email;
 
-    Integer id;
+    @NotBlank(message = "Логин не может быть пустым")
+    @Pattern(regexp = "^\\S+$", message = "Логин не может содержать пробелы")
+    private String login;
 
-    String email;
+    private String name;
 
-    String login;
+    @NotNull(message = "Дата рождения должна быть указана")
+    @PastOrPresent(message = "Дата рождения не может быть в будущем")
+    private LocalDate birthday;
 
-    String name;
+    private Set<Long> friends;
 
-    LocalDate birthday;
-
-    @JsonIgnore
-    Set<Integer> idsFriends = new HashSet<>();
-
-    public static Integer getCount() {
-        return count++;
-    }
-
-    /**
-     * Есть ли в списке друзей друг с ID = id?
-     */
-    public boolean containsFriend(Integer id) {
-        return idsFriends.contains(id);
-    }
-
-    /**
-     * Добавить ID друга в список друзей.
-     */
-    public void addIdFriend(Integer id) {
-        idsFriends.add(id);
-    }
-
-    /**
-     * Удалить ID друга из списка друзей.
-     */
-    public void removeIdFriend(Integer id) {
-        idsFriends.remove(id);
-    }
 }

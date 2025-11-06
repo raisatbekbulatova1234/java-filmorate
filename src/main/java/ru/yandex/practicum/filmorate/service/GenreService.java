@@ -1,33 +1,28 @@
 package ru.yandex.practicum.filmorate.service;
 
-
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.storage.film.dao.GenreStorage;
+import ru.yandex.practicum.filmorate.storage.GenreStorage;
+import ru.yandex.practicum.filmorate.storage.database.GenreDbStorage;
 
-import java.util.List;
+import java.util.Collection;
+
 
 @Service
-@Qualifier("GenreDBService")
-@Slf4j
+@RequiredArgsConstructor
 public class GenreService {
-    @Qualifier("GenreDBStorage")
+
+    private final GenreDbStorage genreDbStorage;
     private final GenreStorage genreStorage;
-    private final ValidationService validationService;
 
-    public GenreService(GenreStorage genreStorage, ValidationService validationService) {
-        this.genreStorage = genreStorage;
-        this.validationService = validationService;
+    public Collection<Genre> findAll() {
+        return genreStorage.findAll();
     }
 
-    public List<Genre> getAllGenres() {
-        return genreStorage.getAllGenres();
-    }
-
-    public Genre getGenreById(Integer genreId) {
-        validationService.checkExistGenreInDB(genreId);
-        return genreStorage.getGenreById(genreId);
+    public Genre getById(int id) {
+        return genreStorage.getById(id)
+                .orElseThrow(() -> new NotFoundException("Жанр с id " + id + " не найден"));
     }
 }

@@ -1,54 +1,31 @@
 package ru.yandex.practicum.filmorate.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import lombok.*;
-
+import jakarta.validation.constraints.*;
+import lombok.Data;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.LinkedHashSet;
 
-
-@Getter
-@Setter
-@ToString
-@EqualsAndHashCode
-@Builder(toBuilder = true)
-@NoArgsConstructor
-@AllArgsConstructor
-
+/**
+ * Film.
+ */
+@Data
 public class Film {
-    static Integer count = 1;
+    private Long id;
 
-    @NotNull
-    @NotBlank
-    Integer id;
-    @NotNull
-    @NotBlank
-    String name;
+    @NotBlank(message = "Название не может быть пустым")
+    private String name;
 
-    String description;
+    @Size(max = 200, message = "Максимальная длина описания — 200 символов")
+    private String description;
 
-    LocalDate releaseDate;
+    @NotNull(message = "Дата релиза должна быть указана")
+    @PastOrPresent(message = "Дата релиза не может быть в будущем")
+    private LocalDate releaseDate;
 
-    @Positive
-    Integer duration;
+    @Positive(message = "Продолжительность фильма должна быть положительным числом")
+    private int duration;
 
-    @NotNull
-    Mpa mpa;
+    private Mpa mpa;
 
-    @JsonIgnore
-    Set<Integer> likes = new HashSet<>();
-
-    @NotNull
-    Set<Genre> genres = new HashSet<>();
-
-    /**
-     * Метод генерации счётчика.
-     */
-    public static Integer getCount() {
-        return count++;
-    }
+    private LinkedHashSet<Genre> genres = new LinkedHashSet<>();
 }

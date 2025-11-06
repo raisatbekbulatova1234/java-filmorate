@@ -1,81 +1,144 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.storage.film.dao.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.film.dao.GenreStorage;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.database.GenreDbStorage;
+import ru.yandex.practicum.filmorate.storage.database.MpaDbStorage;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.stream.Collectors;
 
-@Service
 @Slf4j
-@Qualifier("MpaDBService")
+@Service
+@RequiredArgsConstructor
 public class FilmService {
     private final FilmStorage filmStorage;
+    private final UserStorage userStorage;
+    private final MpaDbStorage mpaDbStorage;
+    private final GenreDbStorage genreDbStorage;
 
-    private final GenreStorage genreStorage;
-
-    private final ValidationService validationService;
-
-    @Autowired
-    public FilmService(@Qualifier("FilmDBStorage") FilmStorage filmStorage,
-                       ValidationService validationService,
-                       @Qualifier("GenreDBStorage") GenreStorage genreStorage) {
-        this.filmStorage = filmStorage;
-        this.validationService = validationService;
-        this.genreStorage = genreStorage;
+    public Collection<Film> findAll() {
+        return filmStorage.findAll();
     }
 
-    /**
-     * Получение списка всех фильмов из библиотеки.
-     */
-    public List<Film> getAllFilms() {
-        List<Film> result = filmStorage.getAllFilms();
-        //Каждому фильму присваиваем набор жанров из таблицы 'film_genre'.
-        result.forEach(film -> film.setGenres(new HashSet<>(genreStorage.findGenresOfFilmId(film.getId()))));
-        log.info("Получен список всех фильмов из библиотеки.");
-        return result;
+    public Film addFilm(Film film) {
+        validateFilm(film);
+        validateMpa(film);
+        validateGenres(film);
+        log.info("Добавление фильма: {}", film.getName());
+        return filmStorage.add(film);
     }
 
-    /**
-     * Создание фильма.
-     */
-    public Film add(Film film) {
-        validationService.checkFilm(film);                      //Проверяем фильм.
-        filmStorage.addInStorage(film);                         //Добавляем в таблицу 'films'.
-        //Добавляем в таблицу 'film_genre'. Сразу же возвращённое значение присваиваем фильму.
-        Set<Genre> genres = genreStorage.addInDBFilm_Genre(film.getId(), film.getGenres());
-        film.setGenres(genres);
-        log.info("В БД добавлен новый фильм:\t\t{}", film);
+    public Film updateFilm(Film film) {
+        Film existingFilm = filmStorage.getById(film.getId());
+        if (existingFilm == null) {
+            throw new NotFoundException("Фильм с id " + film.getId() + " не найден.");
+        }
+        validateFilm(film);
+        validateMpa(film);
+        validateGenres(film);
+        log.info("Обновление фильма с id={}", film.getId());
+        return filmStorage.update(film);
+    }
+
+    public Film getFilm(Long id) {
+        Film film = filmStorage.getById(id);
+        if (film == null) {
+            throw new NotFoundException("Фильм с id " + id + " не найден.");
+        }
         return film;
     }
 
-    public Film update(Film film) {
-        validationService.checkFilm(film);                      //Проверка фильма.
-        validationService.checkExistFilmInDB(film.getId());     //проверка наличия в БД. Иначе NotFoundRecordInBD
-        filmStorage.updateInStorage(film);                      //обновление данных в БД 'films'.
-        Set<Genre> result = genreStorage.addInDBFilm_Genre(film.getId(), film.getGenres());     //добавить в БД 'film_genre'
-        film.setGenres(result);                                 //Обновляем жанры входящего фильма.
-        log.info("Фильм с {} в БД успешно обновлён фильм:\t\t{}", film.getId(), film);
-        return film;
+    public Collection<Film> getAllFilms() {
+        return filmStorage.findAll();
     }
 
-    public Film getFilmById(Integer filmId) {
-        validationService.checkExistFilmInDB(filmId);
-        Film film = filmStorage.getFilmById(filmId);
-        film.setGenres(new HashSet<>(genreStorage.findGenresOfFilmId(filmId)));
-        log.info("Получение фильма из БД по ID = {}:\t\t{}", filmId, film);
-        return film;
+    public void addLike(Long filmId, Long userId) {
+        Film film = filmStorage.getById(filmId);
+        User user = userStorage.getById(userId);
+
+        if (film == null || user == null) {
+            throw new NotFoundException("Фильм или пользователь не найден");
+        }
+
+        filmStorage.addLike(filmId.intValue(), userId.intValue());
+
+        log.info("Пользователь {} поставил лайк фильму {}", userId, filmId);
     }
 
-    public void deleteById(Integer filmId) {
-        filmStorage.removeFromStorageById(filmId);
-        log.info("Выполнено удаление фильма с ID = {} из БД.", filmId);
+    public void removeLike(Long filmId, Long userId) {
+        Film film = filmStorage.getById(filmId);
+        User user = userStorage.getById(userId);
+
+        if (film == null || user == null) {
+            throw new NotFoundException("Фильм или пользователь не найден");
+        }
+
+        filmStorage.removeLike(filmId.intValue(), userId.intValue());
+        log.info("Пользователь {} удалил лайк с фильма {}", userId, filmId);
     }
+
+    public List<Film> getMostPopularFilms(int count) {
+        return filmStorage.getMostPopularFilms(count);
+    }
+
+    private void validateFilm(Film film) {
+        if (film.getName() == null || film.getName().isBlank()) {
+            throw new ValidationException("Название не может быть пустым");
+        }
+        if (film.getDescription() != null && film.getDescription().length() > 200) {
+            throw new ValidationException("Максимальная длина описания — 200 символов");
+        }
+        if (film.getDuration() <= 0) {
+            throw new ValidationException("Продолжительность фильма должна быть положительным числом");
+        }
+        if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
+            throw new ValidationException("Дата релиза — не раньше 28 декабря 1895 года");
+        }
+    }
+
+    private void validateMpa(Film film) {
+        if (film.getMpa() == null) {
+            throw new ValidationException("MPA должен быть указан");
+        }
+
+        if (!mpaDbStorage.existsById(film.getMpa().getId())) {
+            throw new NotFoundException("MPA с id " + film.getMpa().getId() + " не найден.");
+        }
+    }
+
+    private void validateGenres(Film film) {
+        if (film.getGenres() == null || film.getGenres().isEmpty()) {
+            return;
+        }
+
+        Set<Integer> genreIds = film.getGenres().stream()
+                .map(Genre::getId)
+                .collect(Collectors.toSet());
+
+        List<Genre> foundGenres = genreDbStorage.getGenresByIds(genreIds); //Все жанры
+
+        Set<Integer> foundIds = foundGenres.stream()
+                .map(Genre::getId)
+                .collect(Collectors.toSet());
+
+        Set<Integer> missingIds = genreIds.stream()
+                .filter(id -> !foundIds.contains(id))
+                .collect(Collectors.toSet());
+
+        if (!missingIds.isEmpty()) {
+            throw new NotFoundException("Жанры с id " + missingIds + " не найдены.");
+        }
+    }
+
+
 }

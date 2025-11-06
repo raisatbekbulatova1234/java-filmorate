@@ -1,144 +1,116 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.NotFoundRecordInBD;
-import ru.yandex.practicum.filmorate.exception.ValidateException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.friends.dao.FriendsStorage;
-import ru.yandex.practicum.filmorate.storage.user.dao.UserStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.List;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
+@RequiredArgsConstructor
 @Service
-@Qualifier("UserDBService")
 public class UserService {
 
-    //Используется для однозначности использования классов наследников интерфейса.
     private final UserStorage userStorage;
 
-    private final FriendsStorage friendsDBStorage;
-
-    private final ValidationService validationService;
-
-
-    @Autowired
-    public UserService(@Qualifier("UserDBStorage") UserStorage userStorage, ValidationService validationService,
-                       @Qualifier("FriendsDBStorage") FriendsStorage friendsStorage) {
-        this.userStorage = userStorage;
-        this.validationService = validationService;
-        this.friendsDBStorage = friendsStorage;
+    public Collection<User> findAll() {
+        return userStorage.findAll();
     }
 
+    public User addUser(User user) {
+        validateUser(user);
+        log.info("Добавление пользователя: {}", user.getLogin());
+        return userStorage.add(user);
+    }
 
-    /**
-     * Получить пользователя по ID.
-     */
-    public User getUserById(Integer id) {
-        User result = userStorage.getUserById(id);
-        if (result == null) {
-            String error = "В БД отсутствует запись о пользователе при получении пользователя по ID = " + id + ".";
-            log.error(error);
-            throw new NotFoundRecordInBD(error);
+    public User updateUser(User user) {
+        validateUserExists(user.getId());
+        validateUser(user);
+        log.info("Обновление пользователя: {}", user.getId());
+        return userStorage.update(user);
+    }
+
+    public User getUser(Long id) {
+        User user = userStorage.getById(id);
+        if (user == null) {
+            throw new NotFoundException("Пользователь с id " + id + " не найден.");
         }
-        return result;
+        return user;
     }
 
-    /**
-     * Получение списка всех пользователей.
-     */
     public List<User> getAllUsers() {
-        return userStorage.getAllUsersFromStorage();
+
+        return userStorage.getAllUsers();
     }
 
 
-    /**
-     * Добавить юзера в БД.
-     */
-    public User addToStorage(User user) throws ValidateException, NotFoundRecordInBD {
-
-        // TODO: 2022.09.21 02:20:26 Удалить старый UserServiceOld - @Dmitriy_Gaju
-        //Проверяем необходимые поля, и, если имя пустое, то оно равно логину.
-        validationService.checkUser(user);
-        return userStorage.addToStorage(user);
+    public void addFriend(Long id, Long friendId) {
+        validateUserExists(id);
+        validateUserExists(friendId);
+        userStorage.addFriend(id, friendId);
     }
 
-    /**
-     * Обновить юзера в БД.
-     */
-    public User updateInStorage(User user) {
-        //Проверяем необходимые поля, и, если имя пустое, то оно равно логину.
-        validationService.checkUser(user);
-        //Проверяем наличие записи о пользователе с ID = user.getId().
-        validationService.checkExistUserInDB(user.getId());
-        return userStorage.updateInStorage(user);
+    public void removeFriend(Long id, Long friendId) {
+        validateUserExists(id);
+        validateUserExists(friendId);
+        userStorage.removeFriend(id, friendId);
     }
 
-    /**
-     * Удалить пользователя из БД.
-     */
-    public void removeFromStorage(Integer id) {
-        validationService.checkExistUserInDB(id);
-        //Если пользователь есть в БД, то идём далее.
-        userStorage.removeFromStorage(id);
-        String message = "Выполнено удаление пользователя  из БД с ID = '" + id + ".";
-        log.info(message);
+    public List<User> getFriends(Long id) {
+
+        validateUserExists(id);
+        Set<Long> friendIds = userStorage.getUserFriends(id);
+
+        return friendIds.stream()
+                .map(userStorage::getById)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
-
-    /**
-     * Добавить пользователей с ID1 и ID2 в друзья.
-     */
-    public void addEachOtherAsFriends(Integer id1, Integer id2) {
-        log.debug("Запрос на удаление из друзей.");
-        validationService.checkExistUserInDB(id1);
-        validationService.checkExistUserInDB(id2);
-        // TODO: 2022.09.23 22:25:09 idFriendship считаем равным 2 - не подтверждено. - @Dmitriy_Gaju
-        friendsDBStorage.addFriend(id1, id2, 2);    //idFriendship считаем равным 2 - не подтверждено.
+    public List<User> getCommonFriends(Long id, Long otherId) {
+        validateUserExists(id);
+        validateUserExists(otherId);
+        return userStorage.getCommonFriends(id, otherId);
     }
 
-    /**
-     * Удалить пользователей из друзей.
-     */
-    public void deleteFromFriends(Integer id1, Integer id2) {
-        log.debug("Запрос на удаление из друзей пользователем (Id = {}) пользователя (ID = {}).", id1, id2);
-        validationService.checkExistUserInDB(id1);
-        validationService.checkExistUserInDB(id2);
-        friendsDBStorage.deleteFromFriends(id1, id2);
+    private User getUserWithFriends(Long id) {
+        User user = userStorage.getById(id);
+        if (user == null) {
+            throw new NotFoundException("Пользователь с id " + id + " не найден.");
+        }
+        return user;
     }
 
+    private void validateUser(User user) {
+        if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
+            throw new ValidationException("Некорректный email");
+        }
 
-    /**
-     * Вывести список общих друзей.
-     */
-    public List<User> getCommonFriends(Integer id1, Integer id2) {
-        log.debug("Запрос получения общих друзей.");
-        validationService.checkExistUserInDB(id1);
-        validationService.checkExistUserInDB(id2);
+        if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
+            throw new ValidationException("Логин не может быть пустым и не должен содержать пробелы");
+        }
 
-        List<User> result = friendsDBStorage.getCommonFriends(id1, id2);
-        log.debug("Запрос получения общих друзей выполнен.");
-        return result;
+        if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
+            throw new ValidationException("Дата рождения не может быть в будущем");
+        }
+
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
     }
 
-    /**
-     * Вывести список друзей пользователя с ID.
-     */
-    public List<User> getUserFriends(Integer id) {
-        log.debug("Запрошена выдача списка друзей пользователя с ID = {}.", id);
-        validationService.checkExistUserInDB(id);
-        List<User> result = friendsDBStorage.getFriends(id);
-        log.debug("Выполнен запрос на выдачу списка друзей пользователя с ID = {}.", id);
-        return result;
+    private User validateUserExists(Long userId) {
+        User user = userStorage.getById(userId);
+        if (user == null) {
+            throw new NotFoundException("Пользователь с id " + userId + " не найден.");
+        }
+        return user;
     }
 
-    private Integer idFromDBByID(Integer id) {
-
-        return userStorage.getAllUsersFromStorage().stream().filter(u -> u.getId().equals(id))
-                .findFirst().map(User::getId)
-                .orElse(null);
-    }
 }
