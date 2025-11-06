@@ -1,36 +1,59 @@
 package ru.yandex.practicum.filmorate.model;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.PastOrPresent;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import ru.yandex.practicum.filmorate.messages.ExceptionMessages;
-import ru.yandex.practicum.filmorate.validation.User.LoginConstraint;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.*;
 
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
-/**
- * User.
- */
-
-@Data
+@Getter
+@Setter
+@Builder(toBuilder = true)
+@ToString
+@EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
-    private Long id;
 
-    @Email(message = ExceptionMessages.INCORRECT_EMAIL)
-    private String email;
-    @NotBlank(message = ExceptionMessages.EMPTY_LOGIN)
-    @LoginConstraint(message = ExceptionMessages.LOGIN_WITHOUT_SPACE)
-    private String login;
-    private String name;
-    @PastOrPresent(message = ExceptionMessages.INCORRECT_BIRTHDAY)
-    private LocalDate birthday;
-    private Map<Long, FriendshipStatus> friends = new HashMap<>();
+    @JsonIgnore
+    static Integer count = 1;
 
+    Integer id;
+
+    String email;
+
+    String login;
+
+    String name;
+
+    LocalDate birthday;
+
+    @JsonIgnore
+    Set<Integer> idsFriends = new HashSet<>();
+
+    public static Integer getCount() {
+        return count++;
+    }
+
+    /**
+     * Есть ли в списке друзей друг с ID = id?
+     */
+    public boolean containsFriend(Integer id) {
+        return idsFriends.contains(id);
+    }
+
+    /**
+     * Добавить ID друга в список друзей.
+     */
+    public void addIdFriend(Integer id) {
+        idsFriends.add(id);
+    }
+
+    /**
+     * Удалить ID друга из списка друзей.
+     */
+    public void removeIdFriend(Integer id) {
+        idsFriends.remove(id);
+    }
 }
