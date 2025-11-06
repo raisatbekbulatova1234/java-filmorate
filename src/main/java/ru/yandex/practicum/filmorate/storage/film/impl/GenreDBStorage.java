@@ -29,10 +29,6 @@ public class GenreDBStorage implements GenreStorage {
 
     /**
      * Внесение данных в таблицу жанров и фильмов.
-     *
-     * @param filmId ID фильма.
-     * @param genres список жанров.
-     * @return список жанров, запрошенный из БД по тому же фильму.
      */
     @Override
     public Set<Genre> addInDBFilm_Genre(Integer filmId, Set<Genre> genres) {
@@ -54,17 +50,12 @@ public class GenreDBStorage implements GenreStorage {
 
     /**
      * Получить список жанров фильма с ID = idFilm.
-     *
-     * @param filmId ID фильма.
-     * @return список жанров фильма.
      */
     @Override
     public Set<Genre> findGenresOfFilmId(Integer filmId) {
         log.info("Вызван метод получения списка жанров фильма с ID = {}.", filmId);
-        //String sqlQuery2 = "SELECT * FROM FILMS f JOIN MPA M ON M.MPA_ID = F.MPA_ID ORDER BY f.rate DESC LIMIT ?";
         String sqlQuery = "select * from FILM_GENRE as FG join GENRES G on FG.GENRE_ID = G.GENRE_ID where FILM_ID = ?";
         Set<Genre> result = new HashSet<>(jdbcTemplate.query(sqlQuery, genreMapper, filmId));
-        //List<Genre> result2 = jdbcTemplate.query(sqlQuery2, genreMapper, filmId);
         log.info("Получен ответ метода получения списка жанров фильма с ID = {}.", filmId);
         return new HashSet<>(result);
     }
@@ -72,8 +63,6 @@ public class GenreDBStorage implements GenreStorage {
 
     /**
      * Получить все жанры из БД.
-     *
-     * @return список жанров.
      */
     @Override
     public List<Genre> getAllGenres() {
@@ -86,9 +75,6 @@ public class GenreDBStorage implements GenreStorage {
 
     /**
      * Получить жанр из БД по его ID.
-     *
-     * @param genreId ID жанра.
-     * @return жанр Genre(genre_id, name).
      */
     @Override
     public Genre getGenreById(Integer genreId) {
@@ -98,17 +84,11 @@ public class GenreDBStorage implements GenreStorage {
 
     /**
      * Проверить наличие жанра в БД по его ID.
-     * @param genreId ID жанра.
-     * @return True - жанр найден.
-     * <p>False - жанра нет в БД.</p>
      */
     @Override
     public boolean existGenreInDBById(Integer genreId) {
         String sqlQuery = "select COUNT(*) from GENRES where GENRE_ID = ?";
         Integer count = jdbcTemplate.queryForObject(sqlQuery, Integer.class, genreId);
-        if (count!=null) {
-            return count.equals(1);
-        }
-        return false;
+        return count.equals(1);
     }
 }
