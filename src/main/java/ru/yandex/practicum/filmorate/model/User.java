@@ -3,25 +3,26 @@ package ru.yandex.practicum.filmorate.model;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PastOrPresent;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 import ru.yandex.practicum.filmorate.messages.ExceptionMessages;
 import ru.yandex.practicum.filmorate.validation.User.LoginConstraint;
 
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * User.
  */
 
 @Data
-@Getter
-@Setter
-@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
-    private int id;
+    private Long id;
+
     @Email(message = ExceptionMessages.INCORRECT_EMAIL)
     private String email;
     @NotBlank(message = ExceptionMessages.EMPTY_LOGIN)
@@ -30,4 +31,6 @@ public class User {
     private String name;
     @PastOrPresent(message = ExceptionMessages.INCORRECT_BIRTHDAY)
     private LocalDate birthday;
+    private Map<Long, FriendshipStatus> friends = new HashMap<>();
+
 }

@@ -1,4 +1,6 @@
 # java-filmorate
 Template repository for FILMORATE project.
 
-- sprint 10
+ Sprint 11
+ - add likes
+ - add friends
