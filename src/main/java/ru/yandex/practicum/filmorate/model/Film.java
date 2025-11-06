@@ -1,33 +1,54 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.PositiveOrZero;
-import jakarta.validation.constraints.Size;
-import lombok.Data;
-import ru.yandex.practicum.filmorate.messages.ExceptionMessages;
-import ru.yandex.practicum.filmorate.validation.Film.ReleaseDateConstraint;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Film
- */
 
-@Data
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode
+@Builder(toBuilder = true)
+@NoArgsConstructor
+@AllArgsConstructor
+
 public class Film {
+    static Integer count = 1;
 
-    private Long id;
+    @NotNull
+    @NotBlank
+    Integer id;
+    @NotNull
+    @NotBlank
+    String name;
 
-    @NotBlank(message = ExceptionMessages.EMPTY_NAME)
-    private String name;
-    @Size(max = 200, message = ExceptionMessages.MAX_DESCRIPTION)
-    private String description;
-    @ReleaseDateConstraint(message = ExceptionMessages.INCORRECT_DATE)
-    private LocalDate releaseDate;
-    @PositiveOrZero(message = ExceptionMessages.POSITIVE_DURATION)
-    private int duration;
-    private Set<Long> likes = new HashSet<>();
+    String description;
 
+    LocalDate releaseDate;
+
+    @Positive
+    Integer duration;
+
+    @NotNull
+    Mpa mpa;
+
+    @JsonIgnore
+    Set<Integer> likes = new HashSet<>();
+
+    @NotNull
+    Set<Genre> genres = new HashSet<>();
+
+    /**
+     * Метод генерации счётчика.
+     */
+    public static Integer getCount() {
+        return count++;
+    }
 }

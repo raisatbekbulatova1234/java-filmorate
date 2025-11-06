@@ -1,62 +1,99 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.messages.LogMessages;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.film.dao.FilmStorage;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
-@Slf4j
 @Component
+@Qualifier("InMemoryFilmStorage")
+
+//Используется для однозначности использования классов наследников интерфейса.
 public class InMemoryFilmStorage implements FilmStorage {
-    private final Map<Long, Film> films = new HashMap<>();
+
+    private final Map<Integer, Film> films = new HashMap<>();
 
 
+    /**
+     * Получить список всех фильмов.
+     */
+    @Override
     public List<Film> getAllFilms() {
-        log.info(String.valueOf(LogMessages.COUNT));
-        return films.values().stream().toList();
-
+        return new ArrayList<>(films.values());
     }
 
-    public Film addFilm(Film film) {
-        log.info(String.valueOf(LogMessages.TRY_ADD));
-        film.setId(nextId());
+
+    /**
+     * Добавить фильм в библиотеку.
+     */
+    @Override
+    public Film addInStorage(Film film) {
         films.put(film.getId(), film);
-        log.info(String.valueOf(LogMessages.ADD));
         return film;
     }
 
-    public Film updateFilm(Film film) {
-        log.info(String.valueOf(LogMessages.TRY_UPDATE));
-        if (!films.containsKey(film.getId())) {
-            log.info(String.valueOf(LogMessages.MISSING));
-            throw new NoSuchElementException("Фильм не найден");
-        }
+    /**
+     * Обновление фильма в библиотеке.
+     */
+    @Override
+    public Film updateInStorage(Film film) {
         films.put(film.getId(), film);
-        log.info(String.valueOf(LogMessages.UPDATE));
-        return film;
+        return films.get(film.getId());
     }
 
-    public Film getFilmById(long id) {
-        log.info(String.valueOf(LogMessages.TRY_GET_OBJECT));
-        Film film = films.get(id);
-        if (film == null) {
-            log.info(String.valueOf(LogMessages.MISSING));
-            throw new NoSuchElementException("Фильм не найден");
+    /**
+     * Удалить фильм из библиотеки.
+     */
+    @Override
+    public Film removeFromStorage(Film film) {
+        if (films.remove(film.getId(), film)) {
+            return film;
         }
-        return film;
+        return null;
     }
 
-    private Long nextId() {
-        long currentMaxId = films.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+    /**
+     * Метод получения фильма из библиотеки по его ID.
+     */
+    @Override
+    public Film getFilmById(Integer id) {
+        return films.getOrDefault(id, null);
+    }
+
+    /**
+     * Получить фильм по названию.
+     */
+    @Override
+    public Film getFilmByName(String name) {
+        return films.values().stream().filter(f -> f.getName().equals(name)).findFirst().orElse(null);
+    }
+
+    /**
+     * Найти популярные фильмы.
+     */
+    @Override
+    public List<Film> getPopularFilms(Integer count) {
+        return null;
+    }
+
+    /**
+     * Удалить фильм из библиотеки.
+
+     */
+    @Override
+    public void removeFromStorageById(Integer filmId) {
+    }
+
+    /**
+     * Проверка наличия фильма в БД по его ID.
+     */
+    @Override
+    public boolean isExistFilmInDB(Integer id) {
+        return false;
     }
 }

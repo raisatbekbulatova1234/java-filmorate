@@ -1,60 +1,89 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.messages.LogMessages;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.user.dao.UserStorage;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
 
-@Component
 @Slf4j
+@Repository
+@Qualifier("InMemoryUserStorage")       //Используется для однозначности использования классов наследников интерфейса.
 public class InMemoryUserStorage implements UserStorage {
-    private final Map<Long, User> users = new HashMap<>();
+    private final HashMap<Integer, User> users = new HashMap<>();
 
-
-    public List<User> getAllUsers() {
-        log.info(String.valueOf(LogMessages.COUNT), users.size());
-        return users.values().stream().toList();
+    /**
+     * Получить список всех пользователей.
+     */
+    @Override
+    public List<User> getAllUsersFromStorage() {
+        return new ArrayList<>(users.values());
     }
 
-    public User addUser(User user) {
-        log.info(String.valueOf(LogMessages.TRY_ADD), user.getName());
-        user.setId(nextId());
+    /**
+     * Добавить пользователя в БД.
+     */
+    @Override
+    public User addToStorage(User user) {
         users.put(user.getId(), user);
-        log.info(String.valueOf(LogMessages.ADD));
-
         return user;
     }
 
-    public User updateUser(User user) {
-        log.info(String.valueOf(LogMessages.TRY_UPDATE), user.getName());
-        if (!users.containsKey(user.getId())) {
-            throw new NoSuchElementException("Пользователь не найден");
-        }
+
+    /**
+     * Обновить юзера в БД.
+     */
+    @Override
+    public User updateInStorage(User user) {
+
         users.put(user.getId(), user);
-        log.info(String.valueOf(LogMessages.UPDATE));
-        return user;
+        return users.get(user.getId());
     }
 
-    public User getUserById(long id) {
-        User user = users.get(id);
-        if (user == null) {
-            throw new NoSuchElementException("Пользователь не найден");
+    /**
+     * Удалить пользователя из БД.
+     */
+    public User removeFromStorage(User user) {
+        if (users.remove(user.getId(), user)) {
+            return user;
         }
-        return user;
+        return null;
+    }
+
+    /**
+     * Получить пользователя по ID.
+     */
+    @Override
+    public User getUserById(Integer id) {
+        return users.getOrDefault(id, null);
+    }
+
+    /**
+     * Получить пользователя по логину.
+     */
+    @Override
+    public User getUserByLogin(String login) {
+        return users.values().stream().filter(u -> u.getLogin().equals(login)).findFirst().orElse(null);
     }
 
 
-    private Long nextId() {
-        long currentMaxId = users.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+    /**
+     * Удалить пользователя из БД. True - удалено.
+     */
+    @Override
+    public void removeFromStorage(Integer id) {
+        //Когда-нибудь надо будет сделать.
+    }
+
+    /**
+     * Проверка наличия юзера в БД.
+     */
+    @Override
+    public boolean isExistUserInDB(Integer id) {
+        return false;
     }
 }
