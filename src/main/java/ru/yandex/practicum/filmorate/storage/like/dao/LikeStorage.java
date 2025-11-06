@@ -10,6 +10,7 @@ public interface LikeStorage {
      * Пользователь удаляет лайк фильму.
      */
     void removeLike(Integer filmId, Integer userId);
+
     /**
      * Пользователь снимает ранее поставленный лайк фильму.
      */
@@ -18,5 +19,5 @@ public interface LikeStorage {
     /**
      * Возвращает список из первых count фильмов по количеству лайков.
      */
-    public List<Film> getPopularFilm(Integer count);
+     List<Film> getPopularFilm(Integer count);
 }

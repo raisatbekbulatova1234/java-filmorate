@@ -19,6 +19,7 @@ import java.util.List;
 public class LikeDBStorage implements LikeStorage {
     private final JdbcTemplate jdbcTemplate;
     private final FilmMapper filmMapper;
+
     /**
      * Пользователь снимает ранее поставленный лайк фильму. Потом ставит новый.
      */

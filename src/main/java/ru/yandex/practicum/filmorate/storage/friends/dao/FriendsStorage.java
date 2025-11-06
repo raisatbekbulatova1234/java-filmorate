@@ -27,6 +27,17 @@ public interface FriendsStorage {
     /**
      * Вывести список общих друзей.
      */
-     List<User> getCommonFriends(Integer id1, Integer id2);
+    List<User> getCommonFriends(Integer id1, Integer id2);
 
+
+    /**
+     * Получить подписчиков пользователя.
+     */
+    List<User> getFollower(Integer id);
+
+
+    /**
+     * Получить пользователей, на которых подписка.
+     */
+    List<User> getSubscribers(Integer id);
 }

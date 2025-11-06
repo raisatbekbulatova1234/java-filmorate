@@ -117,10 +117,7 @@ public class UserDBStorage implements UserStorage {
     public boolean isExistUserInDB(Integer id) {
         String sqlQuery = "select COUNT(*) from USERS where USER_ID = ?";
         Integer count = jdbcTemplate.queryForObject(sqlQuery, Integer.class, id);
-        if (count != null) {
-            return count.equals(1);
-        }
-        return false;
+        return count.equals(1);
     }
 
 }
