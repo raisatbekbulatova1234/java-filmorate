@@ -12,9 +12,8 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
+import java.sql.*;
 import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -25,88 +24,36 @@ public class FilmDbStorage implements FilmStorage {
 
     private final JdbcTemplate jdbcTemplate;
     private final FilmRowMapper filmRowMapper = new FilmRowMapper();
-    String sqlFindAll = """
-            SELECT f.*, r.name AS rating_name
-            FROM film f
-            JOIN rating r ON f.rating_id = r.rating_id
-            """;
-    String sqlAdd = """
-            INSERT INTO film (name, description, release_date, duration, rating_id)
-            VALUES (?, ?, ?, ?, ?)
-            """;
-    String sqlUpdate = """
-            UPDATE film SET name=?, description=?, release_date=?, duration=?, rating_id=?
-            WHERE film_id=?
-            """;
-    String sqlGetById = """
-            SELECT f.*, r.name AS rating_name
-            FROM film f
-            JOIN rating r ON f.rating_id = r.rating_id
-            WHERE f.film_id = ?
-            """;
-    String sqlGenres = """
-            SELECT g.genre_id, g.name
-            FROM genre g
-            JOIN film_genre fg ON g.genre_id = fg.genre_id
-            WHERE fg.film_id = ?
-            ORDER BY g.genre_id
-            """;
-    String sqlMostPopularFilms = """
-            SELECT f.*, r.name AS rating_name, COUNT(fl.user_id) AS likes_count
-            FROM film f
-            JOIN rating r ON f.rating_id = r.rating_id
-            LEFT JOIN film_like fl ON f.film_id = fl.film_id
-            GROUP BY f.film_id, r.rating_id, r.name, f.name, f.description, f.release_date, f.duration
-            ORDER BY likes_count DESC
-            LIMIT ?
-            """;
 
     @Override
     public Collection<Film> findAll() {
-        List<Film> films = jdbcTemplate.query(sqlFindAll, filmRowMapper);
+        String sqlFilm = """
+                SELECT f.*, r.name AS rating_name
+                FROM film f
+                JOIN rating r ON f.rating_id = r.rating_id
+                """;
+
+        List<Film> films = jdbcTemplate.query(sqlFilm, filmRowMapper);
+
         if (films.isEmpty()) {
             return films;
         }
 
-        List<Long> filmIds = films.stream()
-                .map(Film::getId)
-                .toList();
-        String inSql = filmIds.stream()
-                .map(id -> "?")
-                .collect(Collectors.joining(","));
+        loadGenresForFilms(films);
 
-        String sqlGenres = "SELECT fg.film_id, g.genre_id, g.name " +
-                "FROM film_genre fg " +
-                "JOIN genre g ON fg.genre_id = g.genre_id " +
-                "WHERE fg.film_id IN (" + inSql + ") " +
-                "ORDER BY g.genre_id";
-        Map<Long, LinkedHashSet<Genre>> filmGenres = new HashMap<>();
-        jdbcTemplate.query(sqlGenres, rs -> {
-            Long filmId = rs.getLong("film_id");
-            Genre genre = new Genre(rs.getInt("genre_id"), rs.getString("name"));
-            filmGenres.computeIfAbsent(filmId, k -> new LinkedHashSet<>()).add(genre);
-        }, filmIds.toArray());
-
-        String sqlLikes = "SELECT film_id, user_id FROM film_like WHERE film_id IN (" + inSql + ")";
-        Map<Long, Set<Long>> filmLikes = new HashMap<>();
-        jdbcTemplate.query(sqlLikes, rs -> {
-            Long filmId = rs.getLong("film_id");
-            Long userId = rs.getLong("user_id");
-            filmLikes.computeIfAbsent(filmId, k -> new HashSet<>()).add(userId);
-        }, filmIds.toArray());
-
-        for (Film film : films) {
-            film.setGenres(filmGenres.getOrDefault(film.getId(), new LinkedHashSet<>()));
-        }
         return films;
     }
 
     @Override
     public Film add(Film film) {
+        String sql = """
+                INSERT INTO film (name, description, release_date, duration, rating_id)
+                VALUES (?, ?, ?, ?, ?)
+                """;
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(con -> {
-            PreparedStatement ps = con.prepareStatement(sqlAdd, Statement.RETURN_GENERATED_KEYS);
+            PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, film.getName());
             ps.setString(2, film.getDescription());
             ps.setDate(3, Date.valueOf(film.getReleaseDate()));
@@ -122,8 +69,12 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film update(Film film) {
+        String sql = """
+                UPDATE film SET name=?, description=?, release_date=?, duration=?, rating_id=?
+                WHERE film_id=?
+                """;
 
-        int updated = jdbcTemplate.update(sqlUpdate,
+        int updated = jdbcTemplate.update(sql,
                 film.getName(),
                 film.getDescription(),
                 film.getReleaseDate(),
@@ -140,12 +91,17 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film getById(Long id) {
-
-        Film film = jdbcTemplate.query(sqlGetById, filmRowMapper, id)
+        String sql = """
+                SELECT f.*, r.name AS rating_name
+                FROM film f
+                JOIN rating r ON f.rating_id = r.rating_id
+                WHERE f.film_id = ?
+                """;
+        Film film = jdbcTemplate.query(sql, filmRowMapper, id)
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException("Фильм с id=" + id + " не найден"));
-        loadGenres(film);
+        loadGenresAndLikes(film);
         return film;
     }
 
@@ -170,35 +126,20 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getMostPopularFilms(int count) {
+        String sql = """
+        SELECT f.*, r.name AS rating_name, COUNT(fl.user_id) AS likes_count
+        FROM film f
+        JOIN rating r ON f.rating_id = r.rating_id
+        LEFT JOIN film_like fl ON f.film_id = fl.film_id
+        GROUP BY f.film_id, r.rating_id, r.name, f.name, f.description, f.release_date, f.duration
+        ORDER BY likes_count DESC
+        LIMIT ?
+        """;
 
-        List<Film> films = jdbcTemplate.query(sqlMostPopularFilms, filmRowMapper, count);
+        List<Film> films = jdbcTemplate.query(sql, filmRowMapper, count);
 
         if (films.isEmpty()) {
-            return films;
-        }
-
-        List<Long> filmIds = films.stream()
-                .map(Film::getId)
-                .toList();
-        String inSql = filmIds.stream()
-                .map(id -> "?")
-                .collect(Collectors.joining(","));
-
-        String sqlGenres = "SELECT fg.film_id, g.genre_id, g.name " +
-                "FROM film_genre fg " +
-                "JOIN genre g ON fg.genre_id = g.genre_id " +
-                "WHERE fg.film_id IN (" + inSql + ") " +
-                "ORDER BY g.genre_id";
-
-        Map<Long, LinkedHashSet<Genre>> filmGenres = new HashMap<>();
-        jdbcTemplate.query(sqlGenres, rs -> {
-            Long filmId = rs.getLong("film_id");
-            Genre genre = new Genre(rs.getInt("genre_id"), rs.getString("name"));
-            filmGenres.computeIfAbsent(filmId, k -> new LinkedHashSet<>()).add(genre);
-        }, filmIds.toArray());
-
-        for (Film film : films) {
-            film.setGenres(filmGenres.getOrDefault(film.getId(), new LinkedHashSet<>()));
+            loadGenresForFilms(films);
         }
 
         return films;
@@ -214,11 +155,45 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
-    private void loadGenres(Film film) {
+    private void loadGenresAndLikes(Film film) {
+        String sqlGenres = """
+            SELECT g.genre_id, g.name
+            FROM genre g
+            JOIN film_genre fg ON g.genre_id = fg.genre_id
+            WHERE fg.film_id = ?
+            ORDER BY g.genre_id
+            """;
+
         List<Genre> genreList = jdbcTemplate.query(sqlGenres,
                 (rs, rowNum) -> new Genre(rs.getInt("genre_id"), rs.getString("name")),
                 film.getId());
 
         film.setGenres(new LinkedHashSet<>(genreList));
+    }
+
+    private void loadGenresForFilms(List<Film> films) {
+        List<Long> filmIds = films.stream().map(Film::getId).toList();
+        if (filmIds.isEmpty()) {
+            return;
+        }
+
+        String inSql = filmIds.stream().map(id -> "?").collect(Collectors.joining(","));
+        String sql = "SELECT fg.film_id, g.genre_id, g.name " +
+                "FROM film_genre fg " +
+                "JOIN genre g ON fg.genre_id = g.genre_id " +
+                "WHERE fg.film_id IN (" + inSql + ") " +
+                "ORDER BY g.genre_id";
+
+        Map<Long, LinkedHashSet<Genre>> filmGenres = new HashMap<>();
+
+        jdbcTemplate.query(sql, rs -> {
+            Long filmId = rs.getLong("film_id");
+            Genre genre = new Genre(rs.getInt("genre_id"), rs.getString("name"));
+            filmGenres.computeIfAbsent(filmId, k -> new LinkedHashSet<>()).add(genre);
+        }, filmIds.toArray());
+
+        for (Film film : films) {
+            film.setGenres(filmGenres.getOrDefault(film.getId(), new LinkedHashSet<>()));
+        }
     }
 }

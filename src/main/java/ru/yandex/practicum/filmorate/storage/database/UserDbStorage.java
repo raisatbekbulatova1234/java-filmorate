@@ -23,21 +23,12 @@ public class UserDbStorage implements UserStorage {
     private final JdbcTemplate jdbcTemplate;
     private final UserRowMapper userRowMapper = new UserRowMapper();
 
-    String sqlUsers = "SELECT * FROM users";
-    String sqlAdd = "INSERT INTO users (email, login, name, birthday) VALUES (?, ?, ?, ?)";
-    String sqlUpdate = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE user_id = ?";
-    String sqlFindUserById = "SELECT * FROM users WHERE user_id = ?";
-    String sqlGetAllUsers = "SELECT * FROM users";
-    String sqlGetAllFriends = "SELECT user_id, friend_id FROM friendship";
-    String sqlGetIDCommonFriends = "SELECT f1.friend_id " +
-            "FROM friendship f1 " +
-            "INNER JOIN friendship f2 ON f1.friend_id = f2.friend_id " +
-            "WHERE f1.user_id = ? AND f2.user_id = ?";
-
     @Override
     public List<User> findAll() {
 
+        String sqlUsers = "SELECT * FROM users";
         List<User> users = jdbcTemplate.query(sqlUsers, userRowMapper);
+
         if (users.isEmpty()) {
             return users;
         }
@@ -61,11 +52,12 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
-    public User add(User user) {
+    public  User add(User user) {
+        String sql = "INSERT INTO users (email, login, name, birthday) VALUES (?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
         jdbcTemplate.update(connection -> {
-            PreparedStatement preparedStatement = connection.prepareStatement(sqlAdd, Statement.RETURN_GENERATED_KEYS);
+            PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             preparedStatement.setString(1, user.getEmail());
             preparedStatement.setString(2, user.getLogin());
             preparedStatement.setString(3, user.getName());
@@ -80,8 +72,9 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public User update(User user) {
+        String sql = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE user_id = ?";
 
-        jdbcTemplate.update(sqlUpdate,
+        jdbcTemplate.update(sql,
                 user.getEmail(),
                 user.getLogin(),
                 user.getName(),
@@ -105,14 +98,16 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public Optional<User> findUserById(int id) {
+        String sql = "SELECT * FROM users WHERE user_id = ?";
 
-        List<User> users = jdbcTemplate.query(sqlFindUserById, userRowMapper, id);
+        List<User> users = jdbcTemplate.query(sql, userRowMapper, id);
         return users.isEmpty() ? Optional.empty() : Optional.of(users.get(0));
     }
 
     @Override
     public List<User> getAllUsers() {
-        List<User> users = jdbcTemplate.query(sqlGetAllUsers, userRowMapper);
+        String sql = "SELECT * FROM users";
+        List<User> users = jdbcTemplate.query(sql, userRowMapper);
         Map<Long, Set<Long>> allFriends = getAllFriends();
         for (User user : users) {
             user.setFriends(allFriends.getOrDefault(user.getId(), new HashSet<>()));
@@ -148,7 +143,12 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> getCommonFriends(Long userId1, Long userId2) {
-        List<Long> commonFriendIds = jdbcTemplate.query(sqlGetIDCommonFriends,
+        // Получаем id общих друзей через
+        String sql = "SELECT f1.friend_id " +
+                "FROM friendship f1 " +
+                "INNER JOIN friendship f2 ON f1.friend_id = f2.friend_id " +
+                "WHERE f1.user_id = ? AND f2.user_id = ?";
+        List<Long> commonFriendIds = jdbcTemplate.query(sql,
                 (rs, rowNum) -> rs.getLong("friend_id"), userId1, userId2);
 
         if (commonFriendIds.isEmpty()) {
@@ -157,12 +157,15 @@ public class UserDbStorage implements UserStorage {
 
         String inSql = String.join(",", Collections.nCopies(commonFriendIds.size(), "?"));
         String userSql = "SELECT * FROM users WHERE user_id IN (" + inSql + ")";
-        return jdbcTemplate.query(userSql, userRowMapper, commonFriendIds.toArray());
+        List<User> users = jdbcTemplate.query(userSql, userRowMapper, commonFriendIds.toArray());
+        return users;
     }
 
     private Map<Long, Set<Long>> getAllFriends() {
+        String sql = "SELECT user_id, friend_id FROM friendship";
         Map<Long, Set<Long>> allFriends = new HashMap<>();
-        jdbcTemplate.query(sqlGetAllFriends, (rs, rowNum) -> {
+
+        jdbcTemplate.query(sql, (rs, rowNum) -> {
             Long userId = rs.getLong("user_id");
             Long friendId = rs.getLong("friend_id");
             allFriends.computeIfAbsent(userId, k -> new HashSet<>()).add(friendId);
