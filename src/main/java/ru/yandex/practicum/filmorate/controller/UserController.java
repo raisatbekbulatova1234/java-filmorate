@@ -25,18 +25,18 @@ public class UserController {
     }
 
     @PostMapping
-    public User addUser(@Valid @RequestBody User user) {
-        return userService.addUser(user);
+    public ResponseEntity<User> addUser(@Valid @RequestBody User user) {
+        return ResponseEntity.ok(userService.addUser(user));
     }
 
     @PutMapping
-    public User updateUser(@Valid @RequestBody User user) {
-        return userService.updateUser(user);
+    public ResponseEntity<User> updateUser(@Valid @RequestBody User user) {
+        return ResponseEntity.ok(userService.updateUser(user));
     }
 
     @GetMapping("/{id}")
-    public User getUser(@PathVariable Long id) {
-        return userService.getUser(id);
+    public ResponseEntity<User> getUser(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getUser(id));
     }
 
     @PutMapping("/{id}/friends/{friendId}")
