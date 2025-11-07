@@ -13,19 +13,12 @@ import java.util.Map;
 @RestControllerAdvice
 public class ErrorHandler {
 
-    @ExceptionHandler({MethodArgumentNotValidException.class, ValidationException.class})
-    public ResponseEntity<Map<String, String>> handleValidationException(Exception ex) {
-        String errorMessage;
-        if (ex instanceof MethodArgumentNotValidException) {
-            errorMessage = "Validation error";
-        } else {
-            errorMessage = ex.getMessage();
-        }
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<Map<String, String>> handleValidation(ValidationException ex) {
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", errorMessage));
+                .status(HttpStatus.BAD_REQUEST) // 400 для валидации
+                .body(Map.of("error", ex.getMessage()));
     }
-
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<Map<String, String>> handleNotFound(NotFoundException ex) {
@@ -33,6 +26,13 @@ public class ErrorHandler {
                 .status(HttpStatus.NOT_FOUND) // 404 для ненайденных объектов
                 .body(Map.of("error", ex.getMessage()));
     }
+
+//    @ExceptionHandler(MethodArgumentNotValidException.class)
+//    public ResponseEntity<Map<String, String>> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+//        return ResponseEntity
+//                .status(HttpStatus.BAD_REQUEST)
+//                .body(Map.of("error", "Validation error"));
+//    }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleAnyException(Exception ex) {
