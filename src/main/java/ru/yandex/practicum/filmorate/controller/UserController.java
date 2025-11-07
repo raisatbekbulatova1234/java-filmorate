@@ -22,7 +22,7 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<Collection<User>> findAll() {
-        return ResponseEntity.status(HttpStatus.CREATED).body(userService.findAll());
+        return ResponseEntity.ok(userService.findAll());
     }
 
     @PostMapping
