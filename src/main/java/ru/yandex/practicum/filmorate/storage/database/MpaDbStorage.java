@@ -19,22 +19,24 @@ public class MpaDbStorage implements MpaStorage {
     private final JdbcTemplate jdbcTemplate;
     private final MpaRowMapper mpaRowMapper = new MpaRowMapper();
 
+    String sqlExistsById = "SELECT COUNT(*) FROM rating WHERE rating_id = ?";
+    String sqlFindAll = "SELECT * FROM rating ORDER BY rating_id";
+    String sqlGetById = "SELECT * FROM rating WHERE rating_id = ?";
+
+
     @Override
     public Collection<Mpa> findAll() {
-        String sql = "SELECT * FROM rating ORDER BY rating_id";
-        return jdbcTemplate.query(sql, mpaRowMapper);
+        return jdbcTemplate.query(sqlFindAll, mpaRowMapper);
     }
 
     @Override
     public Optional<Mpa> getById(int id) {
-        String sql = "SELECT * FROM rating WHERE rating_id = ?";
-        List<Mpa> result = jdbcTemplate.query(sql, mpaRowMapper, id);
+        List<Mpa> result = jdbcTemplate.query(sqlGetById, mpaRowMapper, id);
         return result.stream().findFirst();
     }
 
     public boolean existsById(int id) {
-        String sql = "SELECT COUNT(*) FROM rating WHERE rating_id = ?";
-        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, id);
+        Integer count = jdbcTemplate.queryForObject(sqlExistsById, Integer.class, id);
         return count > 0;
     }
 
@@ -43,8 +45,12 @@ public class MpaDbStorage implements MpaStorage {
             return List.of();
         }
 
-        String inClause = ids.stream().map(x -> "?").collect(Collectors.joining(","));
-        String sql = String.format("SELECT * FROM mpa_ratings WHERE id IN (%s) ORDER BY id", inClause);
+        String inClause = ids.stream()
+                .map(x -> "?")
+                .collect(Collectors.joining(","));
+        String sql = String.format("SELECT * FROM mpa_ratings " +
+                "WHERE id IN (%s) " +
+                "ORDER BY id", inClause);
 
         return jdbcTemplate.query(sql, ids.toArray(), mpaRowMapper);
     }
