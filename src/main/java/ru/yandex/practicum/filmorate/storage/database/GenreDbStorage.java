@@ -19,16 +19,19 @@ public class GenreDbStorage implements GenreStorage {
     private final JdbcTemplate jdbcTemplate;
     private final GenreRowMapper genreRowMapper = new GenreRowMapper();
 
+    String sqlFindAll = "SELECT * FROM genre ORDER BY genre_id";
+    String sqlGetById = "SELECT * FROM genre WHERE genre_id = ?";
+    String sqlExistsById = "SELECT COUNT(*) FROM genre WHERE genre_id = ?";
+
+
     @Override
     public List<Genre> findAll() {
-        String sql = "SELECT * FROM genre ORDER BY genre_id";
-        return jdbcTemplate.query(sql, genreRowMapper);
+        return jdbcTemplate.query(sqlFindAll, genreRowMapper);
     }
 
     @Override
     public Optional<Genre> getById(int id) {
-        String sql = "SELECT * FROM genre WHERE genre_id = ?";
-        List<Genre> result = jdbcTemplate.query(sql, genreRowMapper, id);
+        List<Genre> result = jdbcTemplate.query(sqlGetById, genreRowMapper, id);
         return result.stream().findFirst();
     }
 
@@ -53,14 +56,15 @@ public class GenreDbStorage implements GenreStorage {
             return List.of();
         }
         String inSql = genreIds.stream().map(id -> "?").collect(Collectors.joining(","));
-        String sql = "SELECT * FROM genre WHERE genre_id IN (" + inSql + ") ORDER BY genre_id";
+        String sql = "SELECT * FROM genre " +
+                "WHERE genre_id IN (" + inSql + ") " +
+                "ORDER BY genre_id";
         return jdbcTemplate.query(sql, genreIds.toArray(), genreRowMapper);
     }
 
     public boolean existsById(int id) {
-        String sql = "SELECT COUNT(*) FROM genre WHERE genre_id = ?";
-        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, id);
-        return count != null && count > 0;
+        Integer count = jdbcTemplate.queryForObject(sqlExistsById, Integer.class, id);
+        return count > 0;
     }
 
 }
