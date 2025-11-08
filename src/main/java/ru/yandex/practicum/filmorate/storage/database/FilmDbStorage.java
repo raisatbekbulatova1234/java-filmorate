@@ -19,33 +19,33 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Component("FilmDbStorage")
+@Component
 @RequiredArgsConstructor
 public class FilmDbStorage implements FilmStorage {
 
     private final JdbcTemplate jdbcTemplate;
     private final FilmRowMapper filmRowMapper = new FilmRowMapper();
 
-    String sqlFindAllFilms = """
+    private static final String sqlFindAllFilms = """
             SELECT f.*, r.name AS rating_name
             FROM film f
             JOIN rating r ON f.rating_id = r.rating_id
             """;
-    String sqlAdd = """
+    private static final String sqlAdd = """
             INSERT INTO film (name, description, release_date, duration, rating_id)
             VALUES (?, ?, ?, ?, ?)
             """;
-    String sqlUpdate = """
+    private static final String sqlUpdate = """
             UPDATE film SET name=?, description=?, release_date=?, duration=?, rating_id=?
             WHERE film_id=?
             """;
-    String sqlGetById = """
+    private static final String sqlGetById = """
             SELECT f.*, r.name AS rating_name
             FROM film f
             JOIN rating r ON f.rating_id = r.rating_id
             WHERE f.film_id = ?
             """;
-    String sqlGetMostPopularFilms = """
+    private static final String sqlGetMostPopularFilms = """
             SELECT f.*, r.name AS rating_name, COUNT(fl.user_id) AS likes_count
             FROM film f
             JOIN rating r ON f.rating_id = r.rating_id
@@ -54,13 +54,13 @@ public class FilmDbStorage implements FilmStorage {
             ORDER BY likes_count DESC
             LIMIT ?
             """;
-    String sqlGenres = """
-                SELECT g.genre_id, g.name
-                FROM genre g
-                JOIN film_genre fg ON g.genre_id = fg.genre_id
-                WHERE fg.film_id = ?
-                ORDER BY g.genre_id
-                """;
+    private static final String sqlGenres = """
+            SELECT g.genre_id, g.name
+            FROM genre g
+            JOIN film_genre fg ON g.genre_id = fg.genre_id
+            WHERE fg.film_id = ?
+            ORDER BY g.genre_id
+            """;
 
     @Override
     public Collection<Film> findAll() {

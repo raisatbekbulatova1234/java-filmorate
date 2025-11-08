@@ -19,9 +19,9 @@ public class MpaDbStorage implements MpaStorage {
     private final JdbcTemplate jdbcTemplate;
     private final MpaRowMapper mpaRowMapper = new MpaRowMapper();
 
-    String sqlFindAll = "SELECT * FROM rating ORDER BY rating_id";
-    String sqlGetById = "SELECT * FROM rating WHERE rating_id = ?";
-    String sqlExistsById = "SELECT COUNT(*) FROM rating WHERE rating_id = ?";
+    private static final String sqlFindAll = "SELECT * FROM rating ORDER BY rating_id";
+    private static final String sqlGetById = "SELECT * FROM rating WHERE rating_id = ?";
+    private static final String sqlExistsById = "SELECT COUNT(*) FROM rating WHERE rating_id = ?";
 
 
     @Override

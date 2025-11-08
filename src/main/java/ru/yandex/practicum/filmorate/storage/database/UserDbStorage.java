@@ -23,17 +23,17 @@ public class UserDbStorage implements UserStorage {
     private final JdbcTemplate jdbcTemplate;
     private final UserRowMapper userRowMapper = new UserRowMapper();
 
-    String sqlUsers = "SELECT * FROM users";
-    String sqlAdd = "INSERT INTO users (email, login, name, birthday) VALUES (?, ?, ?, ?)";
-    String sqlUpdate = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE user_id = ?";
-    String sqlGetById = "SELECT * FROM users WHERE user_id=?";
-    String sqlFindUserById = "SELECT * FROM users WHERE user_id = ?";
-    String sqlAddFriend = "INSERT INTO friendship (user_id, friend_id) VALUES (?, ?)";
-    String sqlGetUserFriends = "SELECT friend_id FROM friendship WHERE user_id = ?";
-    String sqlGetAllUsers = "SELECT * FROM users";
-    String sqlRemoveFriend = "DELETE FROM friendship WHERE user_id = ? AND friend_id = ?";
-    String sqlGetAllFriends = "SELECT user_id, friend_id FROM friendship";
-    String sqlGetIDCommonFriends = "SELECT f1.friend_id " +
+    private static final String sqlUsers = "SELECT * FROM users";
+    private static final String sqlAdd = "INSERT INTO users (email, login, name, birthday) VALUES (?, ?, ?, ?)";
+    private static final String sqlUpdate = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE user_id = ?";
+    private static final String sqlGetById = "SELECT * FROM users WHERE user_id=?";
+    private static final String sqlFindUserById = "SELECT * FROM users WHERE user_id = ?";
+    private static final String sqlAddFriend = "INSERT INTO friendship (user_id, friend_id) VALUES (?, ?)";
+    private static final String sqlGetUserFriends = "SELECT friend_id FROM friendship WHERE user_id = ?";
+    private static final String sqlGetAllUsers = "SELECT * FROM users";
+    private static final String sqlRemoveFriend = "DELETE FROM friendship WHERE user_id = ? AND friend_id = ?";
+    private static final String sqlGetAllFriends = "SELECT user_id, friend_id FROM friendship";
+    private static final String sqlGetIDCommonFriends = "SELECT f1.friend_id " +
             "FROM friendship f1 " +
             "INNER JOIN friendship f2 ON f1.friend_id = f2.friend_id " +
             "WHERE f1.user_id = ? AND f2.user_id = ?";
