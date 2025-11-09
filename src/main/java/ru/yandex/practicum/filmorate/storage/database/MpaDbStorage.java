@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.database;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.mapper.MpaRowMapper;
@@ -17,7 +18,8 @@ import java.util.stream.Collectors;
 public class MpaDbStorage implements MpaStorage {
 
     private final JdbcTemplate jdbcTemplate;
-    private final MpaRowMapper mpaRowMapper = new MpaRowMapper();
+    @Autowired
+    private final MpaRowMapper mpaRowMapper;
 
     private static final String sqlFindAll = "SELECT * FROM rating ORDER BY rating_id";
     private static final String sqlGetById = "SELECT * FROM rating WHERE rating_id = ?";

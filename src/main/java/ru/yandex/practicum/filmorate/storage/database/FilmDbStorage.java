@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage.database;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -24,7 +25,8 @@ import java.util.stream.Collectors;
 public class FilmDbStorage implements FilmStorage {
 
     private final JdbcTemplate jdbcTemplate;
-    private final FilmRowMapper filmRowMapper = new FilmRowMapper();
+    @Autowired
+    private final FilmRowMapper filmRowMapper;
 
     private static final String sqlFindAllFilms = """
             SELECT f.*, r.name AS rating_name

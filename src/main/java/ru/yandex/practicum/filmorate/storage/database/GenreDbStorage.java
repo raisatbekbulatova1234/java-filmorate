@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.database;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.mapper.GenreRowMapper;
@@ -17,7 +18,8 @@ import java.util.stream.Collectors;
 public class GenreDbStorage implements GenreStorage {
 
     private final JdbcTemplate jdbcTemplate;
-    private final GenreRowMapper genreRowMapper = new GenreRowMapper();
+    @Autowired
+    private final GenreRowMapper genreRowMapper;
 
     private static final String sqlFindAll = "SELECT * FROM genre ORDER BY genre_id";
     private static final String sqlGetById = "SELECT * FROM genre WHERE genre_id = ?";

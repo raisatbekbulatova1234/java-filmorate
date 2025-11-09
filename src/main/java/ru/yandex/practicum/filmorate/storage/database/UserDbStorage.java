@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage.database;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -21,7 +22,8 @@ import java.util.stream.Collectors;
 public class UserDbStorage implements UserStorage {
 
     private final JdbcTemplate jdbcTemplate;
-    private final UserRowMapper userRowMapper = new UserRowMapper();
+    @Autowired
+    private final UserRowMapper userRowMapper;
 
     private static final String sqlUsers = "SELECT * FROM users";
     private static final String sqlAdd = "INSERT INTO users (email, login, name, birthday) VALUES (?, ?, ?, ?)";
