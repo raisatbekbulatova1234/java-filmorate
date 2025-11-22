@@ -1,21 +1,12 @@
 package ru.yandex.practicum.filmorate.model;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.yandex.practicum.filmorate.messages.ExceptionMessages;
-import ru.yandex.practicum.filmorate.validation.User.LoginConstraint;
 
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
-
-/**
- * User.
- */
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -23,14 +14,20 @@ import java.util.Map;
 public class User {
     private Long id;
 
-    @Email(message = ExceptionMessages.INCORRECT_EMAIL)
+    @NotBlank(message = "email должен быть указан")
+    @Email(message = "email должен содержать символ '@'")
     private String email;
-    @NotBlank(message = ExceptionMessages.EMPTY_LOGIN)
-    @LoginConstraint(message = ExceptionMessages.LOGIN_WITHOUT_SPACE)
+
+    @NotBlank(message = "Логин не может быть пустым")
+    @Pattern(regexp = "^\\S+$", message = "Логин не может содержать пробелы")
     private String login;
+
     private String name;
-    @PastOrPresent(message = ExceptionMessages.INCORRECT_BIRTHDAY)
+
+    @NotNull(message = "Дата рождения должна быть указана")
+    @PastOrPresent(message = "Дата рождения не может быть в будущем")
     private LocalDate birthday;
-    private Map<Long, FriendshipStatus> friends = new HashMap<>();
+
+    private Set<Long> friends;
 
 }
